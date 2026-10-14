@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var symbolImages: [String: NSImage] = [:]
     private var isMenuOpen = false
     private var isSleeping = false
+    private var preparationReminder: PreparationReminder?
     private var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -170,6 +171,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func render() {
         let seconds = max(0, Int(ceil(pausedRemaining ?? (deadline - now))))
+        // Pass the new image to the bubble; it waits for the resulting layout.
+        defer { updatePreparationReminder(seconds: seconds) }
         let symbol: String
         let description: String
         let background: NSColor?
@@ -213,6 +216,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.button?.setAccessibilityLabel(description)
         statusMenuItem.title = description
         pauseMenuItem.title = pausedRemaining == nil ? "暂停" : "继续"
+    }
+
+    private func updatePreparationReminder(seconds: Int) {
+        guard phase == .preparing, pausedRemaining == nil, !isSleeping,
+              !isMenuOpen, seconds > 0, let button = statusItem.button else {
+            preparationReminder?.hide()
+            return
+        }
+        if preparationReminder == nil { preparationReminder = PreparationReminder() }
+        preparationReminder?.show(below: button, seconds: seconds)
     }
 
     private func symbolImage(_ symbol: String, forCountdown: Bool = false) -> NSImage? {
@@ -274,6 +287,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func suspendTimer() {
         isSleeping = true
+        preparationReminder?.hide()
         timer?.invalidate()
         timer = nil
     }
