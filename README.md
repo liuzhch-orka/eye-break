@@ -24,6 +24,8 @@ open dist/EyeBreak.app
 
 单独构建：`bash scripts/build.sh`。产物位于 `dist/EyeBreak.app`，可以直接双击启动，也可以拖到「应用程序」。重新构建前请退出已运行的版本。
 
+GitHub Actions 在 `main` 推送、PR 和手动触发时用同一个脚本在 macOS 上构建，并把打包好的 `EyeBreak-<ref>-macos-arm64.zip` 作为 artifact 上传。推送 `v*` 标签时会同时创建 GitHub Release 并附上该 zip。
+
 构建使用本机 Swift 编译器，产物支持 macOS 13 及以上、面向当前 Mac 架构；不是经过公证的分发版本。
 
 建议先将 App 放到「应用程序」等固定位置，再开启自启。若系统拒绝注册，菜单会显示具体错误。
